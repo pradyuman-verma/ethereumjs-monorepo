@@ -101,7 +101,7 @@ export class BlockHeader {
    * @param headerData
    * @param opts
    */
-  public static fromValuesArray(values: BlockHeaderBuffer, opts: BlockOptions = {}) {
+  public static fromValuesArray(headerData: BlockHeaderBuffer, opts: BlockOptions = {}) {
     const [
       parentHash,
       uncleHash,
@@ -119,36 +119,33 @@ export class BlockHeader {
       mixHash,
       nonce,
       baseFeePerGas,
-    ] = values
+    ] = headerData
 
-    if (values.length > 16) {
+    if (headerData.length > 16) {
       throw new Error('invalid header. More values than expected were received')
     }
-    if (values.length < 15) {
+    if (headerData.length < 15) {
       throw new Error('invalid header. Less values than expected were received')
     }
 
     return new BlockHeader(
       {
-        parentHash: toBuffer(parentHash),
-        uncleHash: toBuffer(uncleHash),
-        coinbase: new Address(toBuffer(coinbase)),
-        stateRoot: toBuffer(stateRoot),
-        transactionsTrie: toBuffer(transactionsTrie),
-        receiptTrie: toBuffer(receiptTrie),
-        logsBloom: toBuffer(logsBloom),
-        difficulty: new BN(toBuffer(difficulty)),
-        number: new BN(toBuffer(number)),
-        gasLimit: new BN(toBuffer(gasLimit)),
-        gasUsed: new BN(toBuffer(gasUsed)),
-        timestamp: new BN(toBuffer(timestamp)),
-        extraData: toBuffer(extraData),
-        mixHash: toBuffer(mixHash),
-        nonce: toBuffer(nonce),
-        baseFeePerGas:
-          baseFeePerGas !== undefined && baseFeePerGas !== null
-            ? new BN(toBuffer(baseFeePerGas))
-            : undefined,
+        parentHash,
+        uncleHash,
+        coinbase,
+        stateRoot,
+        transactionsTrie,
+        receiptTrie,
+        logsBloom,
+        difficulty,
+        number,
+        gasLimit,
+        gasUsed,
+        timestamp,
+        extraData,
+        mixHash,
+        nonce,
+        baseFeePerGas,
       },
       opts
     )
@@ -187,29 +184,54 @@ export class BlockHeader {
       )
     }
 
-    const parentHash = headerData.parentHash ? toBuffer(headerData.parentHash) : zeros(32)
-    const uncleHash = headerData.uncleHash ? toBuffer(headerData.uncleHash) : KECCAK256_RLP_ARRAY
+    const defaults = {
+      parentHash: zeros(32),
+      uncleHash: KECCAK256_RLP_ARRAY,
+      coinbase: Address.zero(),
+      stateRoot: zeros(32),
+      transactionsTrie: KECCAK256_RLP,
+      receiptTrie: KECCAK256_RLP,
+      logsBloom: zeros(256),
+      difficulty: new BN(0),
+      number: new BN(0),
+      gasLimit: DEFAULT_GAS_LIMIT,
+      gasUsed: new BN(0),
+      timestamp: new BN(0),
+      extraData: Buffer.from([]),
+      mixHash: zeros(32),
+      nonce: zeros(8),
+      baseFeePerGas: undefined,
+    }
+
+    const parentHash = headerData.parentHash ? toBuffer(headerData.parentHash) : defaults.parentHash
+    const uncleHash = headerData.uncleHash ? toBuffer(headerData.uncleHash) : defaults.uncleHash
     const coinbase = headerData.coinbase
       ? new Address(toBuffer(headerData.coinbase))
-      : Address.zero()
-    let stateRoot = headerData.stateRoot ? toBuffer(headerData.stateRoot) : zeros(32)
+      : defaults.coinbase
+    let stateRoot = headerData.stateRoot ? toBuffer(headerData.stateRoot) : defaults.stateRoot
     const transactionsTrie = headerData.transactionsTrie
       ? toBuffer(headerData.transactionsTrie)
-      : KECCAK256_RLP
-    const receiptTrie = headerData.receiptTrie ? toBuffer(headerData.receiptTrie) : KECCAK256_RLP
-    const logsBloom = headerData.logsBloom ? toBuffer(headerData.logsBloom) : zeros(256)
-    let difficulty = headerData.difficulty ? new BN(toBuffer(headerData.difficulty)) : new BN(0)
-    let number = headerData.number ? new BN(toBuffer(headerData.number)) : new BN(0)
-    let gasLimit = headerData.gasLimit ? new BN(toBuffer(headerData.gasLimit)) : DEFAULT_GAS_LIMIT
-    const gasUsed = headerData.gasUsed ? new BN(toBuffer(headerData.gasUsed)) : new BN(0)
-    let timestamp = headerData.timestamp ? new BN(toBuffer(headerData.timestamp)) : new BN(0)
-    let extraData = headerData.extraData ? toBuffer(headerData.extraData) : Buffer.from([])
-    const mixHash = headerData.mixHash ? toBuffer(headerData.mixHash) : zeros(32)
-    let nonce = headerData.nonce ? toBuffer(headerData.nonce) : zeros(8)
+      : defaults.transactionsTrie
+    const receiptTrie = headerData.receiptTrie
+      ? toBuffer(headerData.receiptTrie)
+      : defaults.receiptTrie
+    const logsBloom = headerData.logsBloom ? toBuffer(headerData.logsBloom) : defaults.logsBloom
+    let difficulty = headerData.difficulty
+      ? new BN(toBuffer(headerData.difficulty))
+      : defaults.difficulty
+    let number = headerData.number ? new BN(toBuffer(headerData.number)) : defaults.number
+    let gasLimit = headerData.gasLimit ? new BN(toBuffer(headerData.gasLimit)) : defaults.gasLimit
+    const gasUsed = headerData.gasUsed ? new BN(toBuffer(headerData.gasUsed)) : defaults.gasUsed
+    let timestamp = headerData.timestamp
+      ? new BN(toBuffer(headerData.timestamp))
+      : defaults.timestamp
+    let extraData = headerData.extraData ? toBuffer(headerData.extraData) : defaults.extraData
+    const mixHash = headerData.mixHash ? toBuffer(headerData.mixHash) : defaults.mixHash
+    let nonce = headerData.nonce ? toBuffer(headerData.nonce) : defaults.nonce
     let baseFeePerGas =
       headerData.baseFeePerGas !== undefined && headerData.baseFeePerGas !== null
         ? new BN(toBuffer(headerData.baseFeePerGas))
-        : undefined
+        : defaults.baseFeePerGas
 
     const hardforkByBlockNumber = options.hardforkByBlockNumber ?? false
     if (hardforkByBlockNumber || options.hardforkByTD !== undefined) {
