@@ -98,10 +98,10 @@ export class BlockHeader {
   /**
    * Static constructor to create a block header from an array of Buffer values
    *
-   * @param headerData
+   * @param values
    * @param opts
    */
-  public static fromValuesArray(headerData: BlockHeaderBuffer, opts: BlockOptions = {}) {
+  public static fromValuesArray(values: BlockHeaderBuffer, opts: BlockOptions = {}) {
     const [
       parentHash,
       uncleHash,
@@ -119,12 +119,12 @@ export class BlockHeader {
       mixHash,
       nonce,
       baseFeePerGas,
-    ] = headerData
+    ] = values
 
-    if (headerData.length > 16) {
+    if (values.length > 16) {
       throw new Error('invalid header. More values than expected were received')
     }
-    if (headerData.length < 15) {
+    if (values.length < 15) {
       throw new Error('invalid header. Less values than expected were received')
     }
 
